@@ -1,0 +1,7 @@
+{
+  "name": "chess-analysis",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react"
+}
