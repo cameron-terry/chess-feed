@@ -1,8 +1,8 @@
 # chess-feed
 
-## about
-
 ![screenshot](./chess-feed-ss.png)
+
+## about
 
 chess-feed is a demo of a web-based search filter for my chess games.
 
