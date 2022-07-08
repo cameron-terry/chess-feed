@@ -2,6 +2,8 @@
 
 ## about
 
+![screenshot](./chess-feed-ss.png)
+
 chess-feed is a demo of a web-based search filter for my chess games.
 
 ## background
