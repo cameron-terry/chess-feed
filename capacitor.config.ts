@@ -2,7 +2,7 @@ import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'io.ionic.starter',
-  appName: 'chess-analysis',
+  appName: 'chess-feed',
   webDir: 'build',
   bundledWebRuntime: false
 };

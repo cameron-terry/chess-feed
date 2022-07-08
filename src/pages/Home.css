@@ -1,0 +1,27 @@
+.container {
+  background-color: #536d6c;
+  display: flex;
+  justify-content: center;
+}
+
+.home_button_div {
+  position: fixed;
+  height: 10vh;
+  width: 10vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2;
+}
+
+.home_icon {
+}
+
+.menu {
+  bottom: 0;
+  right: 0;
+}
+
+section {
+  height: 50vh;
+}
