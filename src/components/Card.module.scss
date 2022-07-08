@@ -1,0 +1,72 @@
+$square-size: 80vw;
+$image_space_percent: 90%;
+
+.card {
+  height: $square-size;
+  width: $square-size;
+}
+
+.chessboard_buttons_div {
+  display: flex;
+  justify-content: space-evenly;
+}
+
+.info_div {
+  position: relative;
+  width: 100%;
+  height: 100% - $image_space_percent;
+  background-color: #f5f2f2;
+  color: black;
+  font-size: 0.6rem;
+  font-weight: bolder;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-rows: 2fr 1fr;
+  background-color: #7e9182;
+}
+
+.modal_section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.opponent {
+  display: flex;
+  justify-content: center;
+}
+
+.pgn_div {
+  width: 100%;
+  height: 100%;
+  padding-left: 1em;
+  padding-right: 1em;
+  display: flex;
+  background-color: #ccc;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid black;
+  text-align: justify;
+}
+
+.rating {
+  position: absolute;
+  right: 0;
+  font-size: 1.3em;
+  top: 1%;
+}
+
+.result {
+  font-size: 0.5em;
+}
+
+.time_format {
+  font-size: 1.5em;
+}
