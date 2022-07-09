@@ -82,6 +82,8 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
   // the user chosen colors for each move
   const [moveColors, setMoveColors] = useState<string[]>([]);
 
+  const [arrows, setArrows] = useState<string[][][]>([]);
+
   // card selected modal trigger
   const [isOpen, setIsOpen] = useState(false);
 
@@ -98,6 +100,9 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
       });
       await getBookmarkFirebase().then((bookmark) => {
         setBookmarkGame(bookmark);
+      });
+      await getArrowsFirebase().then((arrows) => {
+        setArrows(arrows);
       });
     };
 
@@ -143,6 +148,25 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
         return doc.data().bookmark;
       } else {
         return false;
+      }
+    });
+  };
+
+  const getArrowsFirebase = async () => {
+    const game = firestore
+      .collection("users")
+      .doc("roudiere")
+      .collection("games")
+      .doc(text.gameLink);
+
+    return game.get().then((doc: any) => {
+      if (doc !== undefined) {
+        if (doc.data().arrows === undefined) {
+          return new Array(history.length).fill(undefined);
+        }
+        return convertFirebaseArrToArrows(doc.data().arrows);
+      } else {
+        return new Array(history.length).fill(undefined);
       }
     });
   };
@@ -264,6 +288,50 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
     setBookmarkGame(!bookmarkGame);
   };
 
+  const convertFirebaseArrToArrows = (arr: any) => {
+    return arr.map((val: any) => {
+      if (val === "") {
+        return undefined;
+      } else {
+        // first split string by semicolon
+        return val.split(";").map((arrow: string) => {
+          // then split each "from,to" by comma
+          return arrow.split(",");
+        });
+      }
+    });
+  };
+
+  const convertArrowsArrToFirebase = (arr: any) => {
+    return arr.map((val: any) => {
+      if (val === undefined) {
+        return "";
+      } else {
+        return (
+          val
+            // first form each arrow arr into a string "from,to"
+            .map((arrow: string[]) => {
+              return arrow.join(",");
+            })
+            // then join all of these with a semicolon
+            .join(";")
+        );
+      }
+    });
+  };
+
+  const updateArrows = () => {
+    const game = firestore
+      .collection("users")
+      .doc("roudiere")
+      .collection("games")
+      .doc(text.gameLink);
+
+    game.update({
+      arrows: convertArrowsArrToFirebase(arrows),
+    });
+  };
+
   // set icon based on time control
   let icon_choice;
   switch (text.time_control) {
@@ -361,6 +429,7 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
                 setGame(new Chess());
                 setMoveSquares({});
                 updateMoveColors();
+                updateArrows();
                 setIsOpen(false);
               }}
             >
@@ -384,6 +453,7 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
                   }}
                   customDarkSquareStyle={{ backgroundColor: "#3d8a99" }}
                   customLightSquareStyle={{ backgroundColor: "#edeed1" }}
+                  customArrows={arrows[currentMove]}
                 />
               </div>
               <div className={styles.chessboard_buttons_div}>
