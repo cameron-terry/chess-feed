@@ -43,6 +43,7 @@ export interface FilterProps {
   maxMoves: number | null;
   refresh: boolean;
   reverse: boolean;
+  bookmark: boolean;
 }
 
 export const Feed: React.FC<FilterProps> = (props) => {
@@ -65,17 +66,21 @@ export const Feed: React.FC<FilterProps> = (props) => {
 
   useEffect(() => {
     const fetchQuery = async () => {
-      await getGamesWhere({
-        field1: "eco",
-        field2: "==",
-        field3: props.eco,
-      }).then((games) => {
+      await getGamesWhere(
+        {
+          field1: "eco",
+          field2: "==",
+          field3: props.eco,
+        },
+        false,
+        props.reverse
+      ).then((games) => {
         setData(games);
       });
     };
 
     fetchQuery();
-  }, [props]);
+  }, [props.eco]);
 
   useEffect(() => {
     const newCollection = async () => {
@@ -86,31 +91,43 @@ export const Feed: React.FC<FilterProps> = (props) => {
           field3: props.eco,
         },
         true,
-        props.reverse
+        props.reverse,
+        props.bookmark
       ).then((games) => {
         setData(games);
       });
     };
 
     newCollection();
-  }, [props.refresh]);
+  }, [props.refresh, props.bookmark]);
 
   const getGamesWhere = async (
     query: QueryContext,
     getNextBatch: boolean = false,
-    reverse: boolean = false
+    reverse: boolean = false,
+    bookmark: boolean = false
   ) => {
-    let queryResult = firestore
-      .collection("users")
-      .doc("roudiere")
-      .collection("games")
-      .where(query.field1, query.field2, query.field3);
+    let queryResult;
+
+    if (bookmark) {
+      queryResult = firestore
+        .collection("users")
+        .doc("roudiere")
+        .collection("games")
+        .where("bookmark", "==", true);
+    } else {
+      queryResult = firestore
+        .collection("users")
+        .doc("roudiere")
+        .collection("games")
+        .where(query.field1, query.field2, query.field3);
+    }
 
     queryResult = reverse
       ? queryResult.orderBy("smoothness", "asc")
       : queryResult.orderBy("smoothness", "desc");
 
-    if (getNextBatch && lastValue !== undefined) {
+    if (!bookmark && getNextBatch && lastValue !== undefined) {
       queryResult = queryResult.startAt(lastValue).limit(10);
     } else {
       // TODO: remove eventually, exists for testing purposes

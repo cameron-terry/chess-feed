@@ -21,6 +21,7 @@ import {
   closeCircle,
   arrowDownOutline,
   arrowUpOutline,
+  bookmark,
 } from "ionicons/icons";
 import { useState } from "react";
 
@@ -32,6 +33,7 @@ const Home: React.FC = () => {
 
   const [eco, setEco] = useState<string>("C05");
   const [refresh, setRefresh] = useState<boolean>(false);
+  const [showBookmarks, setShowBookmarks] = useState<boolean>(false);
 
   const [filterProps, setFilterProps] = useState<FilterProps>({
     eco: eco,
@@ -39,6 +41,7 @@ const Home: React.FC = () => {
     maxMoves: null,
     refresh: refresh,
     reverse: false,
+    bookmark: showBookmarks,
   });
 
   const setParams = async () => {
@@ -54,6 +57,7 @@ const Home: React.FC = () => {
         maxMoves: max_moves,
         refresh: refresh,
         reverse: false,
+        bookmark: showBookmarks,
       });
     } else {
       setFilterProps({
@@ -62,6 +66,7 @@ const Home: React.FC = () => {
         maxMoves: max_moves,
         refresh: refresh,
         reverse: false,
+        bookmark: showBookmarks,
       });
       setEco(ecoText);
     }
@@ -96,11 +101,38 @@ const Home: React.FC = () => {
                 maxMoves: filterProps.maxMoves,
                 refresh: !refresh,
                 reverse: true,
+                bookmark: showBookmarks,
               });
               setRefresh(!refresh);
             }}
           >
             <IonIcon className="home_icon" icon={arrowUpOutline} />
+          </IonButton>
+        </div>
+        <div className="home_button_div right">
+          <IonButton
+            className="home_button"
+            color={"translucent"}
+            onClick={() => {
+              setFilterProps({
+                eco: ecoText,
+                minMoves: filterProps.minMoves,
+                maxMoves: filterProps.maxMoves,
+                refresh: refresh,
+                reverse: false,
+                bookmark: !showBookmarks,
+              });
+
+              setShowBookmarks(!showBookmarks);
+            }}
+          >
+            <IonIcon
+              className="home_icon"
+              style={{
+                color: showBookmarks ? "red" : "white",
+              }}
+              icon={bookmark}
+            />
           </IonButton>
         </div>
         <div className="home_button_div down">
@@ -114,6 +146,7 @@ const Home: React.FC = () => {
                 maxMoves: filterProps.maxMoves,
                 refresh: !refresh,
                 reverse: false,
+                bookmark: showBookmarks,
               });
               setRefresh(!refresh);
             }}
