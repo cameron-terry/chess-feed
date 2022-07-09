@@ -1,10 +1,11 @@
 # chess-feed
 
 ![screenshot](./chess-feed-ss.png)
+![screenshotCard](./chess-feed-ss-card.png)
 
 ## about
 
-chess-feed is a demo of a web-based search filter for my chess games.
+chess-feed is a demo of a web-based search filter for my chess games, built using React.
 
 ## background
 

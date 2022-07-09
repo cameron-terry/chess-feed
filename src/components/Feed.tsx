@@ -4,6 +4,8 @@ import Card, { CardFrontText } from "./Card";
 import { firestore } from "../firebase";
 import { useEffect, useState } from "react";
 
+// convert seconds format to identifier:
+// "daily" || "rapid" || "blitz" || "bullet"
 const convertTCNumtoStr = (tc: string) => {
   switch (tc) {
     case "1/259200":
@@ -13,7 +15,7 @@ const convertTCNumtoStr = (tc: string) => {
     case "900+10":
       return "rapid";
     case "600":
-      return "blitz";
+      return "rapid";
     case "300":
       return "blitz";
     case "180+2":
@@ -27,20 +29,14 @@ const convertTCNumtoStr = (tc: string) => {
   }
 };
 
-interface CardData {
-  opponent: string;
-  h: number;
-  image: string;
-  time_control: string;
-  result: string;
-}
-
+// for accessing .where() from Firebase
 interface QueryContext {
   field1: string;
   field2: any;
   field3: string;
 }
 
+// for displaying cards based on filter
 export interface FilterProps {
   eco: string;
   minMoves: number | null;
@@ -89,6 +85,10 @@ export const Feed: React.FC<FilterProps> = (props) => {
 
     if (limit !== null) {
       queryResult = queryResult.limit(limit);
+    } else {
+      // TODO: remove eventually, exists for testing purposes
+      // stuff gets very laggy when i pull all cards at once
+      queryResult = queryResult.limit(10);
     }
 
     return queryResult.get().then(async (querySnapshot) => {
@@ -96,10 +96,11 @@ export const Feed: React.FC<FilterProps> = (props) => {
         const returnData: CardFrontText = {
           opponent: doc.data().opponent,
           h: doc.data().smoothness,
-          image: doc.data().image_url,
           time_control: convertTCNumtoStr(doc.data().time_control)!,
           result: doc.data().result,
           pgn: doc.data().pgn,
+          color: doc.data().color,
+          gameLink: doc.id,
         };
         return returnData;
       });

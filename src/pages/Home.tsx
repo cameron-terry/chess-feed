@@ -11,20 +11,12 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
-  useIonViewWillEnter,
 } from "@ionic/react";
 
 import Feed, { FilterProps } from "../components/Feed";
 import "./Home.css";
 
-import {
-  settingsOutline,
-  filter,
-  documentOutline,
-  starOutline,
-  gridOutline,
-  closeCircle,
-} from "ionicons/icons";
+import { gridOutline, closeCircle } from "ionicons/icons";
 import { useState } from "react";
 
 const Home: React.FC = () => {
@@ -36,7 +28,7 @@ const Home: React.FC = () => {
   const [eco, setEco] = useState<string>("C05");
 
   const [filterProps, setFilterProps] = useState<FilterProps>({
-    eco: "C05",
+    eco: eco,
     minMoves: null,
     maxMoves: null,
   });
@@ -59,6 +51,7 @@ const Home: React.FC = () => {
         minMoves: min_moves,
         maxMoves: max_moves,
       });
+      setEco(ecoText);
     }
 
     return true;

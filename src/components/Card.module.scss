@@ -38,6 +38,18 @@ $image_space_percent: 90%;
   align-items: center;
 }
 
+.move_notation_buttons {
+  display: flex;
+  justify-content: space-between;
+
+  ion-button {
+    border: 1px solid black;
+    border-radius: 5%;
+    color: black;
+    background-color: white;
+  }
+}
+
 .opponent {
   display: flex;
   justify-content: center;
@@ -54,6 +66,7 @@ $image_space_percent: 90%;
   align-items: center;
   border: 1px solid black;
   text-align: justify;
+  font-size: 0.8em;
 }
 
 .rating {
