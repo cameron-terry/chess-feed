@@ -16,7 +16,12 @@ import {
 import Feed, { FilterProps } from "../components/Feed";
 import "./Home.css";
 
-import { gridOutline, closeCircle } from "ionicons/icons";
+import {
+  gridOutline,
+  closeCircle,
+  arrowDownOutline,
+  arrowUpOutline,
+} from "ionicons/icons";
 import { useState } from "react";
 
 const Home: React.FC = () => {
@@ -26,11 +31,14 @@ const Home: React.FC = () => {
   const [maxMovesText, setMaxMovesText] = useState<string | null>(null);
 
   const [eco, setEco] = useState<string>("C05");
+  const [refresh, setRefresh] = useState<boolean>(false);
 
   const [filterProps, setFilterProps] = useState<FilterProps>({
     eco: eco,
     minMoves: null,
     maxMoves: null,
+    refresh: refresh,
+    reverse: false,
   });
 
   const setParams = async () => {
@@ -44,12 +52,16 @@ const Home: React.FC = () => {
         eco: eco,
         minMoves: min_moves,
         maxMoves: max_moves,
+        refresh: refresh,
+        reverse: false,
       });
     } else {
       setFilterProps({
         eco: ecoText,
         minMoves: min_moves,
         maxMoves: max_moves,
+        refresh: refresh,
+        reverse: false,
       });
       setEco(ecoText);
     }
@@ -71,6 +83,42 @@ const Home: React.FC = () => {
             onClick={() => setIsOpen(true)}
           >
             <IonIcon className="home_icon" icon={gridOutline} />
+          </IonButton>
+        </div>
+        <div className="home_button_div up">
+          <IonButton
+            className="home_button"
+            color={"translucent"}
+            onClick={() => {
+              setFilterProps({
+                eco: ecoText,
+                minMoves: filterProps.minMoves,
+                maxMoves: filterProps.maxMoves,
+                refresh: !refresh,
+                reverse: true,
+              });
+              setRefresh(!refresh);
+            }}
+          >
+            <IonIcon className="home_icon" icon={arrowUpOutline} />
+          </IonButton>
+        </div>
+        <div className="home_button_div down">
+          <IonButton
+            className="home_button"
+            color={"translucent"}
+            onClick={() => {
+              setFilterProps({
+                eco: ecoText,
+                minMoves: filterProps.minMoves,
+                maxMoves: filterProps.maxMoves,
+                refresh: !refresh,
+                reverse: false,
+              });
+              setRefresh(!refresh);
+            }}
+          >
+            <IonIcon className="home_icon" icon={arrowDownOutline} />
           </IonButton>
         </div>
         <IonModal isOpen={isOpen}>

@@ -247,6 +247,10 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
       return {
         border: "2px solid #9c4943",
       };
+    } else if (text.h > 10) {
+      return {
+        border: "2px solid #f7e5b2",
+      };
     } else if (text.h > 1) {
       return {
         border: "2px solid #85e69a",

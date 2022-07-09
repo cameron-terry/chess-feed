@@ -41,17 +41,21 @@ export interface FilterProps {
   eco: string;
   minMoves: number | null;
   maxMoves: number | null;
+  refresh: boolean;
+  reverse: boolean;
 }
 
 export const Feed: React.FC<FilterProps> = (props) => {
   const [data, setData] = useState<CardFrontText[]>([]);
+  const [lastValue, setLastValue] = useState<number>();
 
   useEffect(() => {
     const fetchFirstCollection = async () => {
-      await getGamesWhere(
-        { field1: "eco", field2: "==", field3: props.eco },
-        5
-      ).then((games) => {
+      await getGamesWhere({
+        field1: "eco",
+        field2: "==",
+        field3: props.eco,
+      }).then((games) => {
         setData(games);
       });
     };
@@ -73,9 +77,28 @@ export const Feed: React.FC<FilterProps> = (props) => {
     fetchQuery();
   }, [props]);
 
+  useEffect(() => {
+    const newCollection = async () => {
+      await getGamesWhere(
+        {
+          field1: "eco",
+          field2: "==",
+          field3: props.eco,
+        },
+        true,
+        props.reverse
+      ).then((games) => {
+        setData(games);
+      });
+    };
+
+    newCollection();
+  }, [props.refresh]);
+
   const getGamesWhere = async (
     query: QueryContext,
-    limit: number | null = null
+    getNextBatch: boolean = false,
+    reverse: boolean = false
   ) => {
     let queryResult = firestore
       .collection("users")
@@ -83,8 +106,12 @@ export const Feed: React.FC<FilterProps> = (props) => {
       .collection("games")
       .where(query.field1, query.field2, query.field3);
 
-    if (limit !== null) {
-      queryResult = queryResult.limit(limit);
+    queryResult = reverse
+      ? queryResult.orderBy("smoothness", "asc")
+      : queryResult.orderBy("smoothness", "desc");
+
+    if (getNextBatch && lastValue !== undefined) {
+      queryResult = queryResult.startAt(lastValue).limit(10);
     } else {
       // TODO: remove eventually, exists for testing purposes
       // stuff gets very laggy when i pull all cards at once
@@ -92,7 +119,12 @@ export const Feed: React.FC<FilterProps> = (props) => {
     }
 
     return queryResult.get().then(async (querySnapshot) => {
-      return querySnapshot.docs.map((doc: any) => {
+      if (querySnapshot.docs.length > 0) {
+        setLastValue(
+          querySnapshot.docs[querySnapshot.docs.length - 1].data().smoothness
+        );
+      }
+      const queryDocs = querySnapshot.docs.map((doc: any) => {
         const returnData: CardFrontText = {
           opponent: doc.data().opponent,
           h: doc.data().smoothness,
@@ -104,12 +136,10 @@ export const Feed: React.FC<FilterProps> = (props) => {
         };
         return returnData;
       });
+
+      return reverse ? queryDocs.reverse() : queryDocs;
     });
   };
-
-  // async function getNextBatch() {
-  //   console.log(`${numLoaded} cards in view`);
-  // }
 
   return (
     <div className={styles.swiper_container_div}>
