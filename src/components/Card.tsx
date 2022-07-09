@@ -29,7 +29,7 @@ import {
 } from "ionicons/icons";
 
 import { Chess } from "chess.js";
-import { Chessboard } from "react-chessboard";
+import { Chessboard, Square } from "react-chessboard";
 import { useEffect, useState } from "react";
 import useWindowDimensions from "../hooks/useWindowDimensions";
 import { firestore } from "../firebase";
@@ -52,6 +52,11 @@ export interface CardFrontText {
   pgn: string;
   color: string;
   gameLink: string;
+}
+
+interface Move {
+  from: string | null;
+  to: string | null;
 }
 
 // colors for moves
@@ -78,6 +83,12 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
 
   // the from and to squares of the most recent move
   const [moveSquares, setMoveSquares] = useState({});
+
+  // the from and to squares of the most recent clicks
+  const [arrowSquares, setArrowSquares] = useState<Move>({
+    from: null,
+    to: null,
+  });
 
   // the user chosen colors for each move
   const [moveColors, setMoveColors] = useState<string[]>([]);
@@ -162,11 +173,13 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
     return game.get().then((doc: any) => {
       if (doc !== undefined) {
         if (doc.data().arrows === undefined) {
-          return new Array(history.length).fill(undefined);
+          let arrows: string[][][] = new Array(history.length).fill(undefined);
+          return arrows;
         }
         return convertFirebaseArrToArrows(doc.data().arrows);
       } else {
-        return new Array(history.length).fill(undefined);
+        let arrows: string[][][] = new Array(history.length).fill(undefined);
+        return arrows;
       }
     });
   };
@@ -320,6 +333,23 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
     });
   };
 
+  const drawArrow = (sq: Square) => {
+    if (arrowSquares.from === null) {
+      setArrowSquares({ from: sq, to: null });
+    } else if (arrowSquares.to === null) {
+      setArrowSquares({ from: arrowSquares.from, to: sq });
+    } else {
+      let i = arrows;
+      // seems reaally unsafe
+      if (i[currentMove] === undefined) {
+        i[currentMove] = [];
+        i[currentMove].push([arrowSquares.from, arrowSquares.to]);
+      }
+
+      setArrowSquares({ from: null, to: null });
+    }
+  };
+
   const updateArrows = () => {
     const game = firestore
       .collection("users")
@@ -454,6 +484,7 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
                   customDarkSquareStyle={{ backgroundColor: "#3d8a99" }}
                   customLightSquareStyle={{ backgroundColor: "#edeed1" }}
                   customArrows={arrows[currentMove]}
+                  onSquareClick={(square) => drawArrow(square)}
                 />
               </div>
               <div className={styles.chessboard_buttons_div}>
