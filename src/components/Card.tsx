@@ -14,6 +14,7 @@ import {
 } from "@ionic/react";
 import {
   alertOutline,
+  bookmark,
   bookOutline,
   caretBackOutline,
   caretForwardOutline,
@@ -84,6 +85,8 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
   // card selected modal trigger
   const [isOpen, setIsOpen] = useState(false);
 
+  const [bookmarkGame, setBookmarkGame] = useState<boolean>(false);
+
   // initial data fetching for Card
   useEffect(() => {
     const fetchData = async () => {
@@ -92,6 +95,9 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
       setHistory(gamePreview.history());
       await getMoveColorsFirebase().then((colors) => {
         setMoveColors(colors);
+      });
+      await getBookmarkFirebase().then((bookmark) => {
+        setBookmarkGame(bookmark);
       });
     };
 
@@ -118,6 +124,25 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
         return doc.data().moveColors;
       } else {
         return new Array(history.length).fill("default");
+      }
+    });
+  };
+
+  const getBookmarkFirebase = async () => {
+    const game = firestore
+      .collection("users")
+      .doc("roudiere")
+      .collection("games")
+      .doc(text.gameLink);
+
+    return game.get().then((doc: any) => {
+      if (doc !== undefined) {
+        if (doc.data().bookmark === undefined) {
+          return false;
+        }
+        return doc.data().bookmark;
+      } else {
+        return false;
       }
     });
   };
@@ -225,6 +250,20 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
     });
   };
 
+  const updateBookmark = () => {
+    const game = firestore
+      .collection("users")
+      .doc("roudiere")
+      .collection("games")
+      .doc(text.gameLink);
+
+    game.update({
+      bookmark: !bookmarkGame,
+    });
+
+    setBookmarkGame(!bookmarkGame);
+  };
+
   // set icon based on time control
   let icon_choice;
   switch (text.time_control) {
@@ -249,11 +288,11 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
       };
     } else if (text.h > 10) {
       return {
-        border: "2px solid #f7e5b2",
+        border: "2px solid #42ff50",
       };
     } else if (text.h > 1) {
       return {
-        border: "2px solid #85e69a",
+        border: "2px solid #20aefa",
       };
     } else {
       return {
@@ -272,6 +311,8 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
             position={gamePreview.fen()}
             boardOrientation={getOrientation()}
             arePiecesDraggable={false}
+            customDarkSquareStyle={{ backgroundColor: "#3d8a99" }}
+            customLightSquareStyle={{ backgroundColor: "#edeed1" }}
           />
           <IonCardHeader color={"light"}>
             <IonCardTitle></IonCardTitle>
@@ -297,6 +338,20 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
       <IonModal isOpen={isOpen}>
         <IonHeader>
           <IonToolbar>
+            <IonButton
+              slot="start"
+              color={"translucent"}
+              onClick={() => {
+                updateBookmark();
+              }}
+            >
+              <IonIcon
+                style={{
+                  color: bookmarkGame ? "red" : "white",
+                }}
+                icon={bookmark}
+              />
+            </IonButton>
             <IonTitle>{text.opponent}</IonTitle>
             <IonButton
               slot="end"
@@ -327,6 +382,8 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
                     borderRadius: "4px",
                     boxShadow: "0 5px 15px rgba(0, 0, 0, 0.5)",
                   }}
+                  customDarkSquareStyle={{ backgroundColor: "#3d8a99" }}
+                  customLightSquareStyle={{ backgroundColor: "#edeed1" }}
                 />
               </div>
               <div className={styles.chessboard_buttons_div}>
