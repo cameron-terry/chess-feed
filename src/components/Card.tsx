@@ -1,5 +1,6 @@
 import styles from "./Card.module.scss";
 import {
+  IonAlert,
   IonBadge,
   IonButton,
   IonCard,
@@ -8,6 +9,7 @@ import {
   IonCardTitle,
   IonHeader,
   IonIcon,
+  IonLabel,
   IonModal,
   IonTitle,
   IonToolbar,
@@ -99,6 +101,8 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const [bookmarkGame, setBookmarkGame] = useState<boolean>(false);
+
+  const [showAlert, setShowAlert] = useState<boolean>(false);
 
   // initial data fetching for Card
   useEffect(() => {
@@ -271,8 +275,12 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
     if (currentMove > 0) {
       let moveList = moveColors;
       moveList[currentMove - 1] = "default";
-      console.log(moveList);
+      // console.log(moveList);
     }
+  };
+
+  const setAllDefault = () => {
+    setMoveColors(Array(history.length).fill("default"));
   };
 
   // save user's game move color preferences to Firebase
@@ -282,9 +290,14 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
       .doc("roudiere")
       .collection("games")
       .doc(text.gameLink);
-    game.update({
-      moveColors: moveColors,
-    });
+
+    try {
+      game.update({
+        moveColors: moveColors,
+      });
+    } catch (error) {
+      setShowAlert(true);
+    }
   };
 
   const updateBookmark = () => {
@@ -468,6 +481,13 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
           </IonToolbar>
         </IonHeader>
         <div className={styles.modal}>
+          <IonAlert
+            isOpen={showAlert}
+            onDidDismiss={() => setShowAlert(false)}
+            header="Missing move colors"
+            message="Make sure a move type is defined for all moves"
+            buttons={["OK"]}
+          />
           <div className={styles.modal_section}>
             <div className={styles.chessboard_interact}>
               <div className={styles.chessboard}>
@@ -530,6 +550,11 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
                   onClick={() => setMoveDefault()}
                 >
                   <IonIcon icon={closeOutline} />
+                </IonButton>
+              </div>
+              <div className={styles.set_all_default}>
+                <IonButton onClick={() => setAllDefault()}>
+                  <IonLabel>Set all default</IonLabel>
                 </IonButton>
               </div>
             </div>
