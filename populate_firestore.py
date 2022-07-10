@@ -111,9 +111,13 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
     if iteration == total:
         print()
 
-def add_all_data_no_pictures():
-  total_games = user_ref.get().to_dict()['total_games']
+def add_data():
+  game_links = [doc.to_dict()["link"] for doc in games_ref.stream()]
+
   for _, series in df.iterrows():
+    if series['Link'] in game_links:
+      continue
+
     color = 'black' if series['White'] == series['opponent'] else 'white'
 
     data = {
@@ -137,10 +141,5 @@ def add_all_data_no_pictures():
     }
     
     games_ref.add(data)
-    user_ref.update({
-      u'total_games': total_games + 1
-    })
 
-    total_games += 1
-
-update_db_with_refs_to_pics()
+add_data()
