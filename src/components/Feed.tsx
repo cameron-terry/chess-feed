@@ -132,7 +132,7 @@ export const Feed: React.FC<FilterProps> = (props) => {
     } else {
       // TODO: remove eventually, exists for testing purposes
       // stuff gets very laggy when i pull all cards at once
-      queryResult = queryResult.limit(10);
+      if (!bookmark) queryResult = queryResult.limit(10);
     }
 
     return queryResult.get().then(async (querySnapshot) => {

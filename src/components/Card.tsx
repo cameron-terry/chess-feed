@@ -56,9 +56,9 @@ export interface CardFrontText {
   gameLink: string;
 }
 
-interface Move {
-  from: string | null;
-  to: string | null;
+// for move highlighting
+interface MoveArrow {
+  start: string | null;
 }
 
 // colors for moves
@@ -87,9 +87,8 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
   const [moveSquares, setMoveSquares] = useState({});
 
   // the from and to squares of the most recent clicks
-  const [arrowSquares, setArrowSquares] = useState<Move>({
-    from: null,
-    to: null,
+  const [arrow, setArrow] = useState<MoveArrow>({
+    start: null,
   });
 
   // the user chosen colors for each move
@@ -100,16 +99,21 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
   // card selected modal trigger
   const [isOpen, setIsOpen] = useState(false);
 
+  // if the user has bookmaarked the card
   const [bookmarkGame, setBookmarkGame] = useState<boolean>(false);
 
+  // if there is an error
   const [showAlert, setShowAlert] = useState<boolean>(false);
 
   // initial data fetching for Card
   useEffect(() => {
     const fetchData = async () => {
+      // set up preview board
       gamePreview.load_pgn(text.pgn);
       setGamePreview(new Chess(gamePreview.fen()));
       setHistory(gamePreview.history());
+
+      // set move colors, is bookmarked, arrows from Firebase
       await getMoveColorsFirebase().then((colors) => {
         setMoveColors(colors);
       });
@@ -124,19 +128,53 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
     fetchData();
   }, [text]); // why am i updating on text?
 
-  /* query Firebase to get the user's designated colors,
+  // is it safe to put this here?
+  const gameRef = firestore
+    .collection("users")
+    .doc("roudiere")
+    .collection("games")
+    .doc(text.gameLink);
+
+  const convertFirebaseArrToArrows = (arr: any) => {
+    return arr.map((val: any) => {
+      if (val === "") {
+        return undefined;
+      } else {
+        // first split string by semicolon
+        return val.split(";").map((arrow: string) => {
+          // then split each "from,to" by comma
+          return arrow.split(",");
+        });
+      }
+    });
+  };
+
+  const convertArrowsArrToFirebase = (arr: any) => {
+    return arr.map((val: any) => {
+      if (val === undefined) {
+        return "";
+      } else {
+        return (
+          val
+            // first form each arrow arr into a string "from,to"
+            .map((arrow: string[]) => {
+              return arrow.join(",");
+            })
+            // then join all of these with a semicolon
+            .join(";")
+        );
+      }
+    });
+  };
+
+  /* query Firebase to get the user's designated move colors for the card,
    * if they exist
    * return a new array of default colors otherwise
    */
   const getMoveColorsFirebase = async () => {
     // query firestore
-    const game = firestore
-      .collection("users")
-      .doc("roudiere")
-      .collection("games")
-      .doc(text.gameLink);
 
-    return game.get().then((doc: any) => {
+    return gameRef.get().then((doc: any) => {
       if (doc !== undefined) {
         if (doc.data().moveColors === undefined) {
           return new Array(history.length).fill("default");
@@ -148,14 +186,20 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
     });
   };
 
-  const getBookmarkFirebase = async () => {
-    const game = firestore
-      .collection("users")
-      .doc("roudiere")
-      .collection("games")
-      .doc(text.gameLink);
+  // save user's game move color preferences to Firebase
+  const updateMoveColorsFirebase = () => {
+    try {
+      gameRef.update({
+        moveColors: moveColors,
+      });
+    } catch (error) {
+      setShowAlert(true);
+    }
+  };
 
-    return game.get().then((doc: any) => {
+  // query Firebase to get if card is bookmarked
+  const getBookmarkFirebase = async () => {
+    return gameRef.get().then((doc: any) => {
       if (doc !== undefined) {
         if (doc.data().bookmark === undefined) {
           return false;
@@ -167,16 +211,24 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
     });
   };
 
-  const getArrowsFirebase = async () => {
-    const game = firestore
-      .collection("users")
-      .doc("roudiere")
-      .collection("games")
-      .doc(text.gameLink);
+  // save is bookmarked to Firebase
+  const updateBookmarkFirebase = () => {
+    gameRef.update({
+      bookmark: !bookmarkGame,
+    });
 
-    return game.get().then((doc: any) => {
+    setBookmarkGame(!bookmarkGame);
+  };
+
+  /* query Firebase to get the user's designated arrows,
+   * if they exist
+   * return a new array ready for arrows otherwise
+   */
+  const getArrowsFirebase = async () => {
+    return gameRef.get().then((doc: any) => {
       if (doc !== undefined) {
-        if (doc.data().arrows === undefined) {
+        // if user selects game and doesn't draw arrows weird 0 length bug happens
+        if (doc.data().arrows === undefined || doc.data().arrows.length === 0) {
           let arrows: string[][][] = new Array(history.length).fill(undefined);
           return arrows;
         }
@@ -188,7 +240,19 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
     });
   };
 
-  // return a color, depending on the string
+  // save designated arrows to Firebase
+  const updateArrowsFirebase = () => {
+    const firebaseArrows = convertArrowsArrToFirebase(arrows);
+    try {
+      gameRef.update({
+        arrows: firebaseArrows,
+      });
+    } catch (error) {
+      console.log(firebaseArrows);
+    }
+  };
+
+  // return a move color for "default" || "brilliant" || "blunder" || "book"
   const getMoveColor = (i: number) => {
     switch (moveColors[i]) {
       case "default":
@@ -203,7 +267,7 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
   };
 
   // set the <ChessBoard /> orientation
-  const getOrientation = () => {
+  const setOrientation = () => {
     return text.color === "white" ? "white" : "black";
   };
 
@@ -279,103 +343,28 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
     }
   };
 
+  // set all move colors to default
   const setAllDefault = () => {
     setMoveColors(Array(history.length).fill("default"));
   };
 
-  // save user's game move color preferences to Firebase
-  const updateMoveColors = () => {
-    const game = firestore
-      .collection("users")
-      .doc("roudiere")
-      .collection("games")
-      .doc(text.gameLink);
-
-    try {
-      game.update({
-        moveColors: moveColors,
-      });
-    } catch (error) {
-      setShowAlert(true);
-    }
-  };
-
-  const updateBookmark = () => {
-    const game = firestore
-      .collection("users")
-      .doc("roudiere")
-      .collection("games")
-      .doc(text.gameLink);
-
-    game.update({
-      bookmark: !bookmarkGame,
-    });
-
-    setBookmarkGame(!bookmarkGame);
-  };
-
-  const convertFirebaseArrToArrows = (arr: any) => {
-    return arr.map((val: any) => {
-      if (val === "") {
-        return undefined;
-      } else {
-        // first split string by semicolon
-        return val.split(";").map((arrow: string) => {
-          // then split each "from,to" by comma
-          return arrow.split(",");
-        });
-      }
-    });
-  };
-
-  const convertArrowsArrToFirebase = (arr: any) => {
-    return arr.map((val: any) => {
-      if (val === undefined) {
-        return "";
-      } else {
-        return (
-          val
-            // first form each arrow arr into a string "from,to"
-            .map((arrow: string[]) => {
-              return arrow.join(",");
-            })
-            // then join all of these with a semicolon
-            .join(";")
-        );
-      }
-    });
-  };
-
   const drawArrow = (sq: Square) => {
-    if (arrowSquares.from === null) {
-      setArrowSquares({ from: sq, to: null });
-    } else if (arrowSquares.to === null) {
-      setArrowSquares({ from: arrowSquares.from, to: sq });
+    if (arrow.start === null) {
+      setArrow({ start: sq });
     } else {
-      let i = arrows;
       // seems reaally unsafe
-      if (i[currentMove] === undefined) {
-        i[currentMove] = [];
-        i[currentMove].push([arrowSquares.from, arrowSquares.to]);
+      if (arrows[currentMove] === undefined) {
+        arrows[currentMove] = [];
       }
-
-      setArrowSquares({ from: null, to: null });
+      arrows[currentMove].push([arrow.start, sq]);
+      setArrows(arrows);
+      setArrow({ start: null });
     }
-  };
-
-  const updateArrows = () => {
-    const game = firestore
-      .collection("users")
-      .doc("roudiere")
-      .collection("games")
-      .doc(text.gameLink);
-
-    game.update({
-      arrows: convertArrowsArrToFirebase(arrows),
-    });
   };
 
   // set icon based on time control
+  // for some reason this doesn't work when changing
+  // icon_choice to a state variable and updating in useEffect()
   let icon_choice;
   switch (text.time_control) {
     case "daily":
@@ -420,7 +409,7 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
           <Chessboard
             boardWidth={width - 105}
             position={gamePreview.fen()}
-            boardOrientation={getOrientation()}
+            boardOrientation={setOrientation()}
             arePiecesDraggable={false}
             customDarkSquareStyle={{ backgroundColor: "#3d8a99" }}
             customLightSquareStyle={{ backgroundColor: "#edeed1" }}
@@ -453,7 +442,7 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
               slot="start"
               color={"translucent"}
               onClick={() => {
-                updateBookmark();
+                updateBookmarkFirebase();
               }}
             >
               <IonIcon
@@ -471,8 +460,8 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
                 setCurrentMove(0);
                 setGame(new Chess());
                 setMoveSquares({});
-                updateMoveColors();
-                updateArrows();
+                updateMoveColorsFirebase();
+                updateArrowsFirebase();
                 setIsOpen(false);
               }}
             >
@@ -493,7 +482,7 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
               <div className={styles.chessboard}>
                 <Chessboard
                   boardWidth={width - 105}
-                  boardOrientation={getOrientation()}
+                  boardOrientation={setOrientation()}
                   arePiecesDraggable={false}
                   position={game.fen()}
                   customSquareStyles={{ ...moveSquares }}
