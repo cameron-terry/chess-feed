@@ -1,12 +1,18 @@
 # chess-feed
 
-<img src="./chess-feed-ss.png" alt="screenshot" width="150"/> 
-<img src="./chess-feed-ss-card.png" alt="screenshot_card" width="150"/>
-<img src="./chess-feed-ss-filter.png" alt="screenshot_filter" width="150"/>
-
-<!-- ![screenshot](./chess-feed-ss.png) -->
-<!-- ![screenshotCard](./chess-feed-ss-card.png)
-![screenshotFilter](./chess-feed-ss-filter.png) -->
+## screenshots
+<table>
+  <tr>
+    <td>Home View</td>
+     <td>Card View</td>
+     <td>Filter View</td>
+  </tr>
+  <tr>
+    <td><img src="./chess-feed-ss.png" alt="screenshot" width="150"/></td>
+    <td><img src="./chess-feed-ss-card.png" alt="screenshot_card" width="150"/></td>
+    <td><img src="./chess-feed-ss-filter.png" alt="screenshot_filter" width="150"/></td>
+  </tr>
+</table>
 
 ## about
 
