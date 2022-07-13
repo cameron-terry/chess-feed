@@ -9,6 +9,9 @@ import {
   IonList,
   IonModal,
   IonPage,
+  IonSegment,
+  IonSegmentButton,
+  IonTextarea,
   IonTitle,
   IonToolbar,
 } from "@ionic/react";
@@ -17,23 +20,34 @@ import Feed, { FilterProps } from "../components/Feed";
 import "./Home.css";
 
 import {
-  gridOutline,
   closeCircle,
   arrowDownOutline,
   arrowUpOutline,
   bookmark,
+  bookOutline,
+  pricetagOutline,
 } from "ionicons/icons";
+
+import { FaDatabase, FaFilter } from "react-icons/fa";
+
 import { useState } from "react";
+import { Chessboard, Square } from "react-chessboard";
+import { Chess } from "chess.js";
 
 const Home: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [ecoText, setEcoText] = useState<string>("");
   const [minMovesText, setMinMovesText] = useState<string | null>(null);
   const [maxMovesText, setMaxMovesText] = useState<string | null>(null);
+  const [lineText, setLineText] = useState<string | null>(null);
 
   const [eco, setEco] = useState<string>("C05");
   const [refresh, setRefresh] = useState<boolean>(false);
   const [showBookmarks, setShowBookmarks] = useState<boolean>(false);
+  const [line, setLine] = useState<string | undefined>(undefined);
+  const [color, setColor] = useState<string | undefined>("any");
+
+  const [modalGame, setModalGame] = useState(new Chess());
 
   const [filterProps, setFilterProps] = useState<FilterProps>({
     eco: eco,
@@ -43,6 +57,14 @@ const Home: React.FC = () => {
     reverse: false,
     bookmark: showBookmarks,
   });
+
+  const safeGameMutate = (modify: any) => {
+    setModalGame((g) => {
+      const update = { ...g };
+      modify(update);
+      return update;
+    });
+  };
 
   const setParams = async () => {
     const min_moves: number | null =
@@ -58,6 +80,8 @@ const Home: React.FC = () => {
         refresh: refresh,
         reverse: false,
         bookmark: showBookmarks,
+        line: line,
+        color: color,
       });
     } else {
       setFilterProps({
@@ -67,11 +91,38 @@ const Home: React.FC = () => {
         refresh: refresh,
         reverse: false,
         bookmark: showBookmarks,
+        line: line,
+        color: color,
       });
       setEco(ecoText);
+      setEcoText("");
     }
 
     return true;
+  };
+
+  const modalBoardOnDrop = (sourceSquare: Square, targetSquare: Square) => {
+    let move = null;
+    safeGameMutate(
+      (modalGame: {
+        move: (arg0: { from: Square; to: Square; promotion: string }) => any;
+      }) => {
+        move = modalGame.move({
+          from: sourceSquare,
+          to: targetSquare,
+          promotion: "q", // always promote to a queen for example simplicity
+        });
+      }
+    );
+
+    setLineText(modalGame.pgn().replaceAll(". ", "."));
+    return move === null ? false : true; // illegal move?
+  };
+
+  const clearLineText = () => {
+    setModalGame(new Chess());
+    setLine("");
+    setLineText("");
   };
 
   return (
@@ -87,7 +138,7 @@ const Home: React.FC = () => {
             color={"dark"}
             onClick={() => setIsOpen(true)}
           >
-            <IonIcon className="home_icon" icon={gridOutline} />
+            <FaDatabase />
           </IonButton>
         </div>
         <div className="home_button_div up">
@@ -96,12 +147,14 @@ const Home: React.FC = () => {
             color={"translucent"}
             onClick={() => {
               setFilterProps({
-                eco: ecoText,
+                eco: eco,
                 minMoves: filterProps.minMoves,
                 maxMoves: filterProps.maxMoves,
                 refresh: !refresh,
                 reverse: true,
                 bookmark: showBookmarks,
+                line: line,
+                color: color,
               });
               setRefresh(!refresh);
             }}
@@ -115,12 +168,14 @@ const Home: React.FC = () => {
             color={"translucent"}
             onClick={() => {
               setFilterProps({
-                eco: ecoText,
+                eco: eco,
                 minMoves: filterProps.minMoves,
                 maxMoves: filterProps.maxMoves,
                 refresh: refresh,
                 reverse: false,
                 bookmark: !showBookmarks,
+                line: line,
+                color: color,
               });
 
               setShowBookmarks(!showBookmarks);
@@ -141,12 +196,14 @@ const Home: React.FC = () => {
             color={"translucent"}
             onClick={() => {
               setFilterProps({
-                eco: ecoText,
+                eco: eco,
                 minMoves: filterProps.minMoves,
                 maxMoves: filterProps.maxMoves,
                 refresh: !refresh,
                 reverse: false,
                 bookmark: showBookmarks,
+                line: line,
+                color: color,
               });
               setRefresh(!refresh);
             }}
@@ -157,6 +214,11 @@ const Home: React.FC = () => {
         <IonModal isOpen={isOpen}>
           <IonHeader>
             <IonToolbar>
+              <IonLabel slot="start">
+                <div style={{ fontSize: "1.5em" }}>
+                  <FaDatabase />
+                </div>
+              </IonLabel>
               <IonTitle>Filters</IonTitle>
               <IonButton
                 slot={"end"}
@@ -169,17 +231,27 @@ const Home: React.FC = () => {
               </IonButton>
             </IonToolbar>
           </IonHeader>
-          <IonList lines="none">
+          <IonList>
             <IonItem>
-              <IonLabel position="stacked">ECO</IonLabel>
+              <IonLabel>
+                <h1>Basic</h1>
+              </IonLabel>
+            </IonItem>
+            <IonItem>
+              <IonLabel position="stacked">
+                <IonIcon icon={bookOutline} />
+                &nbsp; ECO
+              </IonLabel>
               <IonInput
                 value={ecoText}
-                placeholder="C05"
+                placeholder={eco}
                 onIonChange={(e) => setEcoText(e.detail.value!)}
               ></IonInput>
             </IonItem>
             <IonItem>
-              <IonLabel position="stacked">min moves</IonLabel>
+              <IonLabel position="stacked">
+                <FaFilter /> &nbsp; min moves
+              </IonLabel>
               <IonInput
                 value={minMovesText}
                 placeholder="any"
@@ -187,14 +259,86 @@ const Home: React.FC = () => {
               ></IonInput>
             </IonItem>
             <IonItem>
-              <IonLabel position="stacked">max moves</IonLabel>
+              <IonLabel position="stacked">
+                <FaFilter /> &nbsp; max moves
+              </IonLabel>
               <IonInput
                 value={maxMovesText}
                 placeholder="any"
                 onIonChange={(e) => setMaxMovesText(e.detail.value!)}
               ></IonInput>
             </IonItem>
+            <IonItem>
+              <IonLabel position="stacked">
+                <h2>Color</h2>
+              </IonLabel>
+              <IonSegment
+                onIonChange={(e) => setColor(e.detail.value)}
+                value={color}
+              >
+                <IonSegmentButton value="white">white</IonSegmentButton>
+                <IonSegmentButton value="any">any</IonSegmentButton>
+                <IonSegmentButton value="black">black</IonSegmentButton>
+              </IonSegment>
+            </IonItem>
+            <IonItem>
+              <IonLabel>
+                <h1>Advanced</h1>
+              </IonLabel>
+            </IonItem>
+            <IonItem>
+              <IonTextarea
+                readonly
+                value={lineText}
+                placeholder=""
+                onIonChange={(e) => setLineText(e.detail.value!)}
+              ></IonTextarea>
+              <IonButton
+                style={{ height: 50 }}
+                onClick={() => {
+                  setFilterProps({
+                    eco: eco,
+                    minMoves: filterProps.minMoves,
+                    maxMoves: filterProps.maxMoves,
+                    refresh: refresh,
+                    reverse: false,
+                    bookmark: showBookmarks,
+                    line: lineText!,
+                    color: color,
+                  });
+                  setLine(lineText!);
+                  setIsOpen(false);
+                }}
+              >
+                Search by line
+              </IonButton>
+              <IonButton
+                color="medium"
+                style={{ height: 50 }}
+                onClick={() => clearLineText()}
+              >
+                Clear
+              </IonButton>
+            </IonItem>
           </IonList>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            <Chessboard
+              boardWidth={300}
+              position={modalGame.fen()}
+              onPieceDrop={modalBoardOnDrop}
+              customBoardStyle={{
+                borderRadius: "4px",
+                boxShadow: "0 5px 15px rgba(0, 0, 0, 0.5)",
+              }}
+              customDarkSquareStyle={{ backgroundColor: "#3d8a99" }}
+              customLightSquareStyle={{ backgroundColor: "#edeed1" }}
+            />
+          </div>
         </IonModal>
       </IonContent>
     </IonPage>

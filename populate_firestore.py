@@ -112,7 +112,7 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
         print()
 
 def add_data():
-  game_links = [doc.to_dict()["link"] for doc in games_ref.stream()]
+  game_links = [link.replace('\n', '') for link in open('links.txt', 'r').readlines()]
 
   for _, series in df.iterrows():
     if series['Link'] in game_links:
@@ -141,5 +141,10 @@ def add_data():
     }
     
     games_ref.add(data)
+
+  # cleanup
+  with open('links.txt', 'w') as fp:
+    for _, series in df.iterrows():
+      fp.write('{}\n'.format(series['Link']))
 
 add_data()

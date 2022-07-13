@@ -34,6 +34,12 @@ interface QueryContext {
   field1: string;
   field2: any;
   field3: string;
+  filters?: Filters;
+}
+
+interface Filters {
+  minMoves: number | null;
+  maxMoves: number | null;
 }
 
 // for displaying cards based on filter
@@ -44,11 +50,13 @@ export interface FilterProps {
   refresh: boolean;
   reverse: boolean;
   bookmark: boolean;
+  line?: string;
+  color?: string;
 }
 
 export const Feed: React.FC<FilterProps> = (props) => {
   const [data, setData] = useState<CardFrontText[]>([]);
-  const [lastValue, setLastValue] = useState<number>();
+  const [lastValue, setLastValue] = useState<number | string>();
 
   useEffect(() => {
     const fetchFirstCollection = async () => {
@@ -73,7 +81,10 @@ export const Feed: React.FC<FilterProps> = (props) => {
           field3: props.eco,
         },
         false,
-        props.reverse
+        props.reverse,
+        props.bookmark,
+        undefined,
+        props.color
       ).then((games) => {
         setData(games);
       });
@@ -92,35 +103,76 @@ export const Feed: React.FC<FilterProps> = (props) => {
         },
         true,
         props.reverse,
-        props.bookmark
+        props.bookmark,
+        props.line,
+        props.color
       ).then((games) => {
         setData(games);
       });
     };
 
     newCollection();
-  }, [props.refresh, props.bookmark]);
+  }, [props.refresh, props.bookmark, props.line]);
 
   const getGamesWhere = async (
     query: QueryContext,
     getNextBatch: boolean = false,
     reverse: boolean = false,
-    bookmark: boolean = false
+    bookmark: boolean = false,
+    line?: string,
+    color?: string
   ) => {
     let queryResult;
-
-    if (bookmark) {
-      queryResult = firestore
-        .collection("users")
-        .doc("roudiere")
-        .collection("games")
-        .where("bookmark", "==", true);
+    if (line !== undefined) {
+      // have to create these indices to chain .wheres (cant call separately)
+      if (color !== undefined && color !== "any") {
+        queryResult = firestore
+          .collection("users")
+          .doc("roudiere")
+          .collection("games")
+          .where("color", "==", color)
+          .where("pgn", ">=", line)
+          .where("pgn", "<=", line + "\uf8ff")
+          .orderBy("pgn");
+      } else {
+        queryResult = firestore
+          .collection("users")
+          .doc("roudiere")
+          .collection("games")
+          .where("pgn", ">=", line)
+          .where("pgn", "<=", line + "\uf8ff")
+          .orderBy("pgn");
+      }
+    } else if (bookmark) {
+      if (color !== undefined && color !== "any") {
+        queryResult = firestore
+          .collection("users")
+          .doc("roudiere")
+          .collection("games")
+          .where("color", "==", color)
+          .where("bookmark", "==", true);
+      } else {
+        queryResult = firestore
+          .collection("users")
+          .doc("roudiere")
+          .collection("games")
+          .where("bookmark", "==", true);
+      }
     } else {
-      queryResult = firestore
-        .collection("users")
-        .doc("roudiere")
-        .collection("games")
-        .where(query.field1, query.field2, query.field3);
+      if (color !== undefined && color !== "any") {
+        queryResult = firestore
+          .collection("users")
+          .doc("roudiere")
+          .collection("games")
+          .where("color", "==", color)
+          .where(query.field1, query.field2, query.field3);
+      } else {
+        queryResult = firestore
+          .collection("users")
+          .doc("roudiere")
+          .collection("games")
+          .where(query.field1, query.field2, query.field3);
+      }
     }
 
     queryResult = reverse
@@ -137,9 +189,15 @@ export const Feed: React.FC<FilterProps> = (props) => {
 
     return queryResult.get().then(async (querySnapshot) => {
       if (querySnapshot.docs.length > 0) {
-        setLastValue(
-          querySnapshot.docs[querySnapshot.docs.length - 1].data().smoothness
-        );
+        if (line === undefined) {
+          setLastValue(
+            querySnapshot.docs[querySnapshot.docs.length - 1].data().smoothness
+          );
+        } else {
+          setLastValue(
+            querySnapshot.docs[querySnapshot.docs.length - 1].data().pgn
+          );
+        }
       }
       const queryDocs = querySnapshot.docs.map((doc: any) => {
         const returnData: CardFrontText = {

@@ -1,3 +1,7 @@
+ion-content {
+  --ion-background-color: #536d6c;
+}
+
 .container {
   background-color: #536d6c;
   display: flex;

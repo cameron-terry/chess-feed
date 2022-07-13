@@ -30,6 +30,8 @@ import {
   timerOutline,
 } from "ionicons/icons";
 
+import { AiOutlineCheck } from "react-icons/ai";
+
 import { Chess } from "chess.js";
 import { Chessboard, Square } from "react-chessboard";
 import { useEffect, useState } from "react";
@@ -86,7 +88,7 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
   // the from and to squares of the most recent move
   const [moveSquares, setMoveSquares] = useState({});
 
-  // the from and to squares of the most recent clicks
+  // user arrow start point
   const [arrow, setArrow] = useState<MoveArrow>({
     start: null,
   });
@@ -94,12 +96,13 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
   // the user chosen colors for each move
   const [moveColors, setMoveColors] = useState<string[]>([]);
 
+  // user designated arrows
   const [arrows, setArrows] = useState<string[][][]>([]);
 
   // card selected modal trigger
   const [isOpen, setIsOpen] = useState(false);
 
-  // if the user has bookmaarked the card
+  // if the user has bookmarked the card
   const [bookmarkGame, setBookmarkGame] = useState<boolean>(false);
 
   // if there is an error
@@ -248,7 +251,13 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
         arrows: firebaseArrows,
       });
     } catch (error) {
-      console.log(firebaseArrows);
+      console.log("something went wrong -- resetting all arrows");
+      let arrow_template: string[][][] = new Array(history.length).fill(
+        undefined
+      );
+      gameRef.update({
+        arrows: convertArrowsArrToFirebase(arrow_template),
+      });
     }
   };
 
@@ -348,6 +357,7 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
     setMoveColors(Array(history.length).fill("default"));
   };
 
+  // draw an arrow on a <Chessboard />
   const drawArrow = (sq: Square) => {
     if (arrow.start === null) {
       setArrow({ start: sq });
@@ -538,7 +548,7 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
                   color={"translucent"}
                   onClick={() => setMoveDefault()}
                 >
-                  <IonIcon icon={closeOutline} />
+                  <AiOutlineCheck />
                 </IonButton>
               </div>
               <div className={styles.set_all_default}>

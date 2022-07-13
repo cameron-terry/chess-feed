@@ -2,6 +2,7 @@
 
 ![screenshot](./chess-feed-ss.png)
 ![screenshotCard](./chess-feed-ss-card.png)
+![screenshotFilter](./chess-feed-ss-filter.png)
 
 ## about
 
