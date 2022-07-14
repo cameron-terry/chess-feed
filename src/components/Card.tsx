@@ -31,6 +31,7 @@ import {
 } from "ionicons/icons";
 
 import { AiOutlineCheck } from "react-icons/ai";
+import { FaEyeSlash } from "react-icons/fa";
 
 import { Chess } from "chess.js";
 import { Chessboard, Square } from "react-chessboard";
@@ -104,6 +105,8 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
 
   // if the user has bookmarked the card
   const [bookmarkGame, setBookmarkGame] = useState<boolean>(false);
+
+  const [hideGame, setHideGame] = useState<boolean>(false);
 
   // if there is an error
   const [showAlert, setShowAlert] = useState<boolean>(false);
@@ -221,6 +224,14 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
     });
 
     setBookmarkGame(!bookmarkGame);
+  };
+
+  const updateHiddenFirebase = () => {
+    gameRef.update({
+      hidden: !hideGame,
+    });
+
+    setHideGame(!hideGame);
   };
 
   /* query Firebase to get the user's designated arrows,
@@ -460,6 +471,16 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
                   color: bookmarkGame ? "red" : "white",
                 }}
                 icon={bookmark}
+              />
+            </IonButton>
+            <IonButton color={"translucent"}>
+              <FaEyeSlash
+                style={{
+                  color: hideGame ? "blue" : "white",
+                }}
+                onClick={() => {
+                  updateHiddenFirebase();
+                }}
               />
             </IonButton>
             <IonTitle>{text.opponent}</IonTitle>

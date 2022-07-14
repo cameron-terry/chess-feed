@@ -9,6 +9,7 @@ import sqlite3 as sq3
 import chess
 import chess.svg
 import sys
+import google.api_core.exceptions
 
 # connect to database, get data
 con = sq3.connect('../CHESS_ANALYSIS/datasets/chess_games.db')
@@ -140,7 +141,11 @@ def add_data():
       u'white_elo': series['WhiteElo'],
     }
     
-    games_ref.add(data)
+    try:
+      games_ref.add(data)
+    except google.api_core.exceptions.AlreadyExists:
+      print("{} already exists".format(series["Link"]))
+      continue
 
   # cleanup
   with open('links.txt', 'w') as fp:

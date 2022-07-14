@@ -1,6 +1,7 @@
 # chess-feed
 
 ## screenshots
+
 <table>
   <tr>
     <td>Home View</td>
@@ -16,7 +17,7 @@
 
 ## about
 
-chess-feed is a demo of a web-based search filter for my chess games, built using React.
+chess-feed is a demo of a web-based search filter for my chess games built with React.
 
 ## background
 
