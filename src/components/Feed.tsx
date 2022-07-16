@@ -56,7 +56,7 @@ export interface FilterProps {
 
 export const Feed: React.FC<FilterProps> = (props) => {
   // cards
-  const [data, setData] = useState<CardFrontText[]>([]);
+  const [data, setData] = useState<(CardFrontText | null)[]>([]);
 
   // smoothness, for sorting OR pgn for get by line
   const [lastValue, setLastValue] = useState<number | string>();
@@ -217,18 +217,20 @@ export const Feed: React.FC<FilterProps> = (props) => {
         }
       }
       // data format
-      const queryDocs = querySnapshot.docs.map((doc: any) => {
-        const returnData: CardFrontText = {
-          opponent: doc.data().opponent,
-          h: doc.data().smoothness,
-          time_control: convertTCNumtoStr(doc.data().time_control)!,
-          result: doc.data().result,
-          pgn: doc.data().pgn,
-          color: doc.data().color,
-          gameLink: doc.id,
-        };
-        return returnData;
-      });
+      const queryDocs = querySnapshot.docs
+        .map((doc: any) => {
+          const returnData: CardFrontText = {
+            opponent: doc.data().opponent,
+            h: doc.data().smoothness,
+            time_control: convertTCNumtoStr(doc.data().time_control)!,
+            result: doc.data().result,
+            pgn: doc.data().pgn,
+            color: doc.data().color,
+            gameLink: doc.id,
+          };
+          return doc.data().hidden !== true ? returnData : null;
+        })
+        .filter((n) => n);
 
       // flip order if navigating up (so largest to smallest is preserved)
       return reverse ? queryDocs.reverse() : queryDocs;
@@ -241,7 +243,7 @@ export const Feed: React.FC<FilterProps> = (props) => {
         data.map((game, index) => {
           return (
             <section key={index}>
-              <Card text={game} />
+              <Card text={game!} />
             </section>
           );
         })}
