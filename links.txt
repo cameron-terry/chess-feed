@@ -293,7 +293,6 @@ https://www.chess.com/game/live/8199944739
 https://www.chess.com/game/live/8202794151
 https://www.chess.com/game/live/8202901739
 https://www.chess.com/game/live/8206397905
-https://www.chess.com/game/live/6237234068
 https://www.chess.com/game/live/6366748476
 https://www.chess.com/game/live/6380252367
 https://www.chess.com/game/live/6388677611
@@ -1836,3 +1835,7 @@ https://www.chess.com/game/live/51502175797
 https://www.chess.com/game/live/51502215749
 https://www.chess.com/game/live/51503973539
 https://www.chess.com/game/live/51504023545
+https://www.chess.com/game/live/6237234068
+https://www.chess.com/game/live/51584383425
+https://www.chess.com/game/live/51584989779
+https://www.chess.com/game/live/51585031089

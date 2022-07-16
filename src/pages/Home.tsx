@@ -25,7 +25,7 @@ import {
   arrowUpOutline,
   bookmark,
   bookOutline,
-  pricetagOutline,
+  swapVerticalOutline,
 } from "ionicons/icons";
 
 import { FaDatabase, FaFilter } from "react-icons/fa";
@@ -46,6 +46,9 @@ const Home: React.FC = () => {
   const [showBookmarks, setShowBookmarks] = useState<boolean>(false);
   const [line, setLine] = useState<string | undefined>(undefined);
   const [color, setColor] = useState<string | undefined>("any");
+
+  const [clearColor, setClearColor] = useState<string>("medium");
+  const [userOrientation, setUserOrientation] = useState<string>("white");
 
   const [modalGame, setModalGame] = useState(new Chess());
 
@@ -101,6 +104,16 @@ const Home: React.FC = () => {
     return true;
   };
 
+  const getOrientation = () => {
+    return userOrientation === "white" ? "white" : "black";
+  };
+
+  const flipBoard = () => {
+    userOrientation === "white"
+      ? setUserOrientation("black")
+      : setUserOrientation("white");
+  };
+
   const modalBoardOnDrop = (sourceSquare: Square, targetSquare: Square) => {
     let move = null;
     safeGameMutate(
@@ -116,6 +129,9 @@ const Home: React.FC = () => {
     );
 
     setLineText(modalGame.pgn().replaceAll(". ", "."));
+    if (move !== null) {
+      setClearColor("danger");
+    }
     return move === null ? false : true; // illegal move?
   };
 
@@ -123,6 +139,7 @@ const Home: React.FC = () => {
     setModalGame(new Chess());
     setLine("");
     setLineText("");
+    setClearColor("medium");
   };
 
   return (
@@ -313,7 +330,7 @@ const Home: React.FC = () => {
                 Search by line
               </IonButton>
               <IonButton
-                color="medium"
+                color={clearColor}
                 style={{ height: 50 }}
                 onClick={() => clearLineText()}
               >
@@ -330,6 +347,7 @@ const Home: React.FC = () => {
             <Chessboard
               boardWidth={300}
               position={modalGame.fen()}
+              boardOrientation={getOrientation()}
               onPieceDrop={modalBoardOnDrop}
               customBoardStyle={{
                 borderRadius: "4px",
@@ -338,6 +356,18 @@ const Home: React.FC = () => {
               customDarkSquareStyle={{ backgroundColor: "#3d8a99" }}
               customLightSquareStyle={{ backgroundColor: "#edeed1" }}
             />
+            <div
+              style={{
+                position: "absolute",
+                right: 0,
+                bottom: "12px",
+                fontSize: "1.5em",
+              }}
+            >
+              <IonButton color={"translucent"} onClick={() => flipBoard()}>
+                <IonIcon icon={swapVerticalOutline} />
+              </IonButton>
+            </div>
           </div>
         </IonModal>
       </IonContent>

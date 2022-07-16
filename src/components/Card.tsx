@@ -21,7 +21,6 @@ import {
   caretBackOutline,
   caretForwardOutline,
   closeCircle,
-  closeOutline,
   flameOutline,
   flashOutline,
   helpOutline,
@@ -72,7 +71,7 @@ const bookMove = "rgba(222, 192, 115, 0.4)";
 
 const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
   // width used to determine <Chessboard /> size
-  const { width, height } = useWindowDimensions();
+  const { width } = useWindowDimensions();
 
   // board to show final position when scrolling (card front)
   const [gamePreview, setGamePreview] = useState(new Chess());
@@ -132,6 +131,7 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
     };
 
     fetchData();
+    // eslint-disable-next-line
   }, [text]); // why am i updating on text?
 
   // is it safe to put this here?

@@ -55,8 +55,28 @@ export interface FilterProps {
 }
 
 export const Feed: React.FC<FilterProps> = (props) => {
+  // cards
   const [data, setData] = useState<CardFrontText[]>([]);
+
+  // smoothness, for sorting OR pgn for get by line
   const [lastValue, setLastValue] = useState<number | string>();
+
+  const newCollection = async (getNextBatch: boolean) => {
+    await getGamesWhere(
+      {
+        field1: "eco",
+        field2: "==",
+        field3: props.eco,
+      },
+      getNextBatch,
+      props.reverse,
+      props.bookmark,
+      props.line,
+      props.color
+    ).then((games) => {
+      setData(games);
+    });
+  };
 
   useEffect(() => {
     const fetchFirstCollection = async () => {
@@ -70,6 +90,7 @@ export const Feed: React.FC<FilterProps> = (props) => {
     };
 
     fetchFirstCollection();
+    // eslint-disable-next-line
   }, []);
 
   useEffect(() => {
@@ -83,7 +104,7 @@ export const Feed: React.FC<FilterProps> = (props) => {
         false,
         props.reverse,
         props.bookmark,
-        undefined,
+        undefined, // prioritize new eco
         props.color
       ).then((games) => {
         setData(games);
@@ -91,28 +112,19 @@ export const Feed: React.FC<FilterProps> = (props) => {
     };
 
     fetchQuery();
+    // eslint-disable-next-line
   }, [props.eco]);
 
+  // show bookmarks or last query, depending on if bookmark is selected
   useEffect(() => {
-    const newCollection = async () => {
-      await getGamesWhere(
-        {
-          field1: "eco",
-          field2: "==",
-          field3: props.eco,
-        },
-        true,
-        props.reverse,
-        props.bookmark,
-        props.line,
-        props.color
-      ).then((games) => {
-        setData(games);
-      });
-    };
+    newCollection(false);
+    // eslint-disable-next-line
+  }, [props.bookmark]);
 
-    newCollection();
-  }, [props.refresh, props.bookmark, props.line]);
+  useEffect(() => {
+    newCollection(true);
+    // eslint-disable-next-line
+  }, [props.refresh, props.line]);
 
   const getGamesWhere = async (
     query: QueryContext,
@@ -125,6 +137,7 @@ export const Feed: React.FC<FilterProps> = (props) => {
     let queryResult;
     if (line !== undefined) {
       // have to create these indices to chain .wheres (cant call separately)
+      // should probably move these to their own hooks / function calls
       if (color !== undefined && color !== "any") {
         queryResult = firestore
           .collection("users")
@@ -175,19 +188,23 @@ export const Feed: React.FC<FilterProps> = (props) => {
       }
     }
 
+    // navigate up/down the result
     queryResult = reverse
       ? queryResult.orderBy("smoothness", "asc")
       : queryResult.orderBy("smoothness", "desc");
 
-    if (!bookmark && getNextBatch && lastValue !== undefined) {
+    // determine which page to show
+    if (getNextBatch && lastValue !== undefined) {
+      // next page
       queryResult = queryResult.startAt(lastValue).limit(10);
     } else {
-      // TODO: remove eventually, exists for testing purposes
-      // stuff gets very laggy when i pull all cards at once
-      if (!bookmark) queryResult = queryResult.limit(10);
+      // first page
+      queryResult = queryResult.limit(10);
     }
 
+    // retrieve docs and return the data as CardFrontText
     return queryResult.get().then(async (querySnapshot) => {
+      // set the last value (for pagination)
       if (querySnapshot.docs.length > 0) {
         if (line === undefined) {
           setLastValue(
@@ -199,6 +216,7 @@ export const Feed: React.FC<FilterProps> = (props) => {
           );
         }
       }
+      // data format
       const queryDocs = querySnapshot.docs.map((doc: any) => {
         const returnData: CardFrontText = {
           opponent: doc.data().opponent,
@@ -212,6 +230,7 @@ export const Feed: React.FC<FilterProps> = (props) => {
         return returnData;
       });
 
+      // flip order if navigating up (so largest to smallest is preserved)
       return reverse ? queryDocs.reverse() : queryDocs;
     });
   };
