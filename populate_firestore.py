@@ -24,6 +24,8 @@ db = firestore.client()
 user_ref = db.collection(u'users').document(u'roudiere')
 games_ref = user_ref.collection(u'games')
 
+
+# functions no longer needed
 def board_to_svg(fen, link):
     board = chess.Board(fen)
     boardsvg = chess.svg.board(board=board)
@@ -72,7 +74,6 @@ def update_db_with_refs_to_pics():
 
       printProgressBar(i+1, l, prefix='(firestore_prep) Uploading and linking images:', suffix='Complete', length=50)
     
-
 def set_id_field():
   docs = games_ref.stream()
   docs_updated = 0
@@ -89,7 +90,6 @@ def set_id_field():
     except KeyError:
       print(doc.id)
       continue
-
 
 def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
     """
@@ -112,6 +112,8 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
     if iteration == total:
         print()
 
+
+# functions in use
 def add_data():
   game_links = [link.replace('\n', '') for link in open('links.txt', 'r').readlines()]
 
@@ -152,4 +154,44 @@ def add_data():
     for _, series in df.iterrows():
       fp.write('{}\n'.format(series['Link']))
 
-add_data()
+def add_openings_info():
+  tcs = {'blitz': '300', 'rapid': '600'}
+  for time_control in tcs:
+    openings_df = pd.read_csv('../CHESS_ANALYSIS/datasets/openings/all_openings_descriptive_statsTimeControl_{}.csv'.format(tcs[time_control]))
+    firebase_data = openings_df.T.to_dict()
+    for opening_info in firebase_data:
+      # print(firebase_data[opening_info])
+      openings_ref = user_ref.collection(u'{}Openings'.format(time_control))
+      docs = openings_ref.where(u'opening', u'==', u'{}'.format(firebase_data[opening_info]["opening"])).stream()
+
+      i = len([doc for doc in docs])
+      # print(i)
+      if i == 0:
+        openings_ref.add(firebase_data[opening_info])
+      else:
+        for doc in docs:
+          doc_ref = openings_ref.document(doc.id)
+          # doc_ref.update(firebase_data[opening_info])
+          doc_ref.update({
+            u'games': firebase_data[opening_info]['games'],
+            u'elo': firebase_data[opening_info]['elo'],
+            u'last_played': firebase_data[opening_info]['last_played'],
+            u'score': firebase_data[opening_info]['score'],
+            u'white_win_percent': firebase_data[opening_info]['white_win_percent'],
+            u'black_win_percent': firebase_data[opening_info]['black_win_percent'],
+            u'avg_cp_loss/game': firebase_data[opening_info]['avg_cp_loss/game'],
+            u'inaccuracies/game': firebase_data[opening_info]['inaccuracies/game'],
+            u'mistakes/game': firebase_data[opening_info]['mistakes/game'],
+            u'blunders/game': firebase_data[opening_info]['blunders/game'],
+            u'familiarity': firebase_data[opening_info]['familiarity'],
+            u'sharpness': firebase_data[opening_info]['sharpness'],
+            u'best': firebase_data[opening_info]['best'],
+          })
+
+
+if __name__ == '__main__':
+  def update_firebase():
+    add_data()
+    add_openings_info()
+
+  update_firebase()

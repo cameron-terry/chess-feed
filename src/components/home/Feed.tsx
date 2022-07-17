@@ -1,7 +1,7 @@
 // import required modules
 import styles from "./Feed.module.scss";
 import Card, { CardFrontText } from "./Card";
-import { firestore } from "../firebase";
+import { firestore } from "../../firebase";
 import { useEffect, useState } from "react";
 
 // convert seconds format to identifier:

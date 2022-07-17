@@ -35,8 +35,8 @@ import { FaEyeSlash } from "react-icons/fa";
 import { Chess } from "chess.js";
 import { Chessboard, Square } from "react-chessboard";
 import { useEffect, useState } from "react";
-import useWindowDimensions from "../hooks/useWindowDimensions";
-import { firestore } from "../firebase";
+import useWindowDimensions from "../../hooks/useWindowDimensions";
+import { firestore } from "../../firebase";
 
 /*
  * inputs to card
@@ -512,7 +512,7 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
             <div className={styles.chessboard_interact}>
               <div className={styles.chessboard}>
                 <Chessboard
-                  boardWidth={width - 105}
+                  boardWidth={105}
                   boardOrientation={setOrientation()}
                   arePiecesDraggable={false}
                   position={game.fen()}

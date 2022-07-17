@@ -16,7 +16,7 @@ import {
   IonToolbar,
 } from "@ionic/react";
 
-import Feed, { FilterProps } from "../components/Feed";
+import Feed, { FilterProps } from "../components/home/Feed";
 import "./Home.css";
 
 import {
@@ -28,7 +28,7 @@ import {
   swapVerticalOutline,
 } from "ionicons/icons";
 
-import { FaDatabase, FaFilter } from "react-icons/fa";
+import { FaChess, FaDatabase, FaFilter } from "react-icons/fa";
 
 import { useState } from "react";
 import { Chessboard, Square } from "react-chessboard";
@@ -180,32 +180,43 @@ const Home: React.FC = () => {
           </IonButton>
         </div>
         <div className="home_button_div right">
-          <IonButton
-            className="home_button"
-            color={"translucent"}
-            onClick={() => {
-              setFilterProps({
-                eco: eco,
-                minMoves: filterProps.minMoves,
-                maxMoves: filterProps.maxMoves,
-                refresh: refresh,
-                reverse: false,
-                bookmark: !showBookmarks,
-                line: line,
-                color: color,
-              });
+          <div>
+            <IonButton
+              className="home_button"
+              color={"translucent"}
+              onClick={() => {
+                setFilterProps({
+                  eco: eco,
+                  minMoves: filterProps.minMoves,
+                  maxMoves: filterProps.maxMoves,
+                  refresh: refresh,
+                  reverse: false,
+                  bookmark: !showBookmarks,
+                  line: line,
+                  color: color,
+                });
 
-              setShowBookmarks(!showBookmarks);
-            }}
-          >
-            <IonIcon
-              className="home_icon"
-              style={{
-                color: showBookmarks ? "red" : "white",
+                setShowBookmarks(!showBookmarks);
               }}
-              icon={bookmark}
-            />
-          </IonButton>
+            >
+              <IonIcon
+                className="home_icon"
+                style={{
+                  color: showBookmarks ? "red" : "white",
+                }}
+                icon={bookmark}
+              />
+            </IonButton>
+          </div>
+          <div>
+            <IonButton
+              className="home_button"
+              color={"translucent"}
+              routerLink="/openings"
+            >
+              <FaChess />
+            </IonButton>
+          </div>
         </div>
         <div className="home_button_div down">
           <IonButton

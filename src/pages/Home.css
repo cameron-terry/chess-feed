@@ -29,7 +29,9 @@ ion-content {
 }
 
 .right {
-  top: 0;
+  display: flex;
+  flex-direction: column;
+  top: 20px;
   right: 0;
 }
 
