@@ -1,5 +1,5 @@
 import { firestore } from "../firebase";
-import { Container, OpeningProps } from "../components/openings/Container";
+import { Container } from "../components/openings/Container";
 
 import {
   IonPage,
@@ -13,13 +13,17 @@ import {
   IonLabel,
   IonSegment,
   IonSegmentButton,
+  useIonLoading,
 } from "@ionic/react";
 import { chevronBackOutline, flashOutline, timerOutline } from "ionicons/icons";
 import { useEffect, useState } from "react";
+import { OpeningProps } from "./OpeningProps";
 
 const Openings: React.FC = () => {
   const [openings, setOpenings] = useState<OpeningProps[]>([]);
   const [selected, setSelected] = useState<string>("blitz");
+
+  const [present, dismiss] = useIonLoading();
 
   const getOpenings = async (value: string) => {
     const blitzOpenings = firestore
@@ -31,19 +35,19 @@ const Openings: React.FC = () => {
     // can't go inside segment change code -- creates an infinite loop
     setSelected(value);
 
-    return blitzOpenings.get().then((querySnapshot) => {
+    const result = blitzOpenings.get().then((querySnapshot) => {
       return querySnapshot.docs.map((doc) => {
         const opening: OpeningProps = {
-          avg_cp_loss_per_game: doc.data()["avg_cp_loss/game"],
+          avg_cp_loss_per_game: doc.data().avg_cp_loss_per_game,
           best: doc.data().best,
           black_win_percent: doc.data().black_win_percent,
-          blunders_per_game: doc.data()["blunders/game"],
+          blunders_per_game: doc.data().blunders_per_game,
           elo: doc.data().elo,
           familiarity: doc.data().familiarity,
           games: doc.data().games,
-          inaccuracies_per_game: doc.data()["inaccuracies/game"],
+          inaccuracies_per_game: doc.data().inaccuracies_per_game,
           last_played: doc.data().last_played,
-          mistakes_per_game: doc.data()["mistakes/game"],
+          mistakes_per_game: doc.data().mistakes_per_game,
           opening: doc.data().opening,
           score: doc.data().score,
           sharpness: doc.data().sharpness,
@@ -52,10 +56,13 @@ const Openings: React.FC = () => {
         return opening;
       });
     });
+    return result;
   };
 
   useEffect(() => {
-    getOpenings("blitz").then((openings) => setOpenings(openings));
+    getOpenings("blitz").then((openings) => {
+      setOpenings(openings);
+    });
   }, []);
 
   return (
@@ -79,11 +86,11 @@ const Openings: React.FC = () => {
           </IonLabel>
           <IonSegment
             value={selected}
-            onIonChange={(e) =>
+            onIonChange={(e) => {
               getOpenings(e.detail.value!).then((openings) => {
                 setOpenings(openings);
-              })
-            }
+              });
+            }}
           >
             <IonSegmentButton value="blitz">
               <IonIcon icon={flashOutline} />
@@ -100,7 +107,13 @@ const Openings: React.FC = () => {
             openings.map((opening, index) => {
               return (
                 // todo: make each open a dynamic page
-                <IonItem button key={index}>
+                <IonItem
+                  button
+                  routerLink={`/openings/${
+                    openings[index].opening.split("--")[0]
+                  }_${selected}`}
+                  key={index}
+                >
                   <Container {...opening} />
                 </IonItem>
               );

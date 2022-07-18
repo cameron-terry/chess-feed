@@ -41,13 +41,6 @@ $image_space_percent: 90%;
 .move_notation_buttons {
   display: flex;
   justify-content: space-between;
-
-  ion-button {
-    border: 1px solid black;
-    border-radius: 5%;
-    color: black;
-    background-color: white;
-  }
 }
 
 .opponent {
@@ -80,8 +73,10 @@ $image_space_percent: 90%;
   font-size: 0.5em;
 }
 
-// .set_all_default {
-// }
+.set_all_default {
+  display: flex;
+  justify-content: center;
+}
 
 .time_format {
   font-size: 1.5em;

@@ -512,7 +512,7 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
             <div className={styles.chessboard_interact}>
               <div className={styles.chessboard}>
                 <Chessboard
-                  boardWidth={105}
+                  boardWidth={300}
                   boardOrientation={setOrientation()}
                   arePiecesDraggable={false}
                   position={game.fen()}
@@ -549,29 +549,38 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
                   <IonIcon icon={caretForwardOutline} />
                 </IonButton>
               </div>
+              <div>&nbsp;</div>
               <div className={styles.move_notation_buttons}>
-                <IonButton color={"translucent"} onClick={() => setMoveBook()}>
+                <IonButton
+                  style={{ border: "1px solid black", borderRadius: "20%" }}
+                  color="light"
+                  onClick={() => setMoveBook()}
+                >
                   <IonIcon icon={bookOutline} />
                 </IonButton>
                 <IonButton
-                  color={"translucent"}
+                  style={{ border: "1px solid black", borderRadius: "20%" }}
+                  color="light"
                   onClick={() => setMoveBrilliant()}
                 >
                   <IonIcon icon={alertOutline} />
                 </IonButton>
                 <IonButton
-                  color={"translucent"}
+                  style={{ border: "1px solid black", borderRadius: "20%" }}
+                  color="light"
                   onClick={() => setMoveBlunder()}
                 >
                   <IonIcon icon={helpOutline} />
                 </IonButton>
                 <IonButton
-                  color={"translucent"}
+                  style={{ border: "1px solid black", borderRadius: "20%" }}
+                  color="light"
                   onClick={() => setMoveDefault()}
                 >
                   <AiOutlineCheck />
                 </IonButton>
               </div>
+              <div>&nbsp;</div>
               <div className={styles.set_all_default}>
                 <IonButton onClick={() => setAllDefault()}>
                   <IonLabel>Set all default</IonLabel>
@@ -580,7 +589,11 @@ const Card: React.FC<{ text: CardFrontText }> = ({ text }) => {
             </div>
           </div>
           <div className={styles.modal_section}>
-            <div className={styles.pgn_div}>{text.pgn}</div>
+            <div className={styles.pgn_div}>
+              <IonLabel>
+                <p>{text.pgn}</p>
+              </IonLabel>
+            </div>
           </div>
         </div>
       </IonModal>

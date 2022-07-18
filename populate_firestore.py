@@ -155,38 +155,52 @@ def add_data():
       fp.write('{}\n'.format(series['Link']))
 
 def add_openings_info():
+  def sanitize_input(inpT):
+    opening_info_sanitized = {}
+    for key in inpT:
+      opening_info_sanitized[key.replace('/', '_per_')] = inpT[key]
+
+    return opening_info_sanitized
+
+  def get_docs(inpT):
+    return openings_ref.where(u'opening', u'==', u'{}'.format(inpT["opening"])).stream()
+
+
   tcs = {'blitz': '300', 'rapid': '600'}
   for time_control in tcs:
     openings_df = pd.read_csv('../CHESS_ANALYSIS/datasets/openings/all_openings_descriptive_statsTimeControl_{}.csv'.format(tcs[time_control]))
+    openings_ref = user_ref.collection(u'{}Openings'.format(time_control))
     firebase_data = openings_df.T.to_dict()
+
     for opening_info in firebase_data:
-      # print(firebase_data[opening_info])
-      openings_ref = user_ref.collection(u'{}Openings'.format(time_control))
-      docs = openings_ref.where(u'opening', u'==', u'{}'.format(firebase_data[opening_info]["opening"])).stream()
+      docs = get_docs(firebase_data[opening_info])
 
       i = len([doc for doc in docs])
-      # print(i)
       if i == 0:
-        openings_ref.add(firebase_data[opening_info])
+        openings_ref.add(sanitize_input(firebase_data[opening_info]))
       else:
+        docs = get_docs(firebase_data[opening_info])
         for doc in docs:
           doc_ref = openings_ref.document(doc.id)
-          # doc_ref.update(firebase_data[opening_info])
+          doc_ref.update(sanitize_input(firebase_data[opening_info]))
           doc_ref.update({
-            u'games': firebase_data[opening_info]['games'],
-            u'elo': firebase_data[opening_info]['elo'],
-            u'last_played': firebase_data[opening_info]['last_played'],
-            u'score': firebase_data[opening_info]['score'],
-            u'white_win_percent': firebase_data[opening_info]['white_win_percent'],
-            u'black_win_percent': firebase_data[opening_info]['black_win_percent'],
-            u'avg_cp_loss/game': firebase_data[opening_info]['avg_cp_loss/game'],
-            u'inaccuracies/game': firebase_data[opening_info]['inaccuracies/game'],
-            u'mistakes/game': firebase_data[opening_info]['mistakes/game'],
-            u'blunders/game': firebase_data[opening_info]['blunders/game'],
-            u'familiarity': firebase_data[opening_info]['familiarity'],
-            u'sharpness': firebase_data[opening_info]['sharpness'],
-            u'best': firebase_data[opening_info]['best'],
+            u'eco': firebase_data[opening_info]['opening'].split('--')[0]
           })
+          # doc_ref.update({
+          #   u'games': firebase_data[opening_info]['games'],
+          #   u'elo': firebase_data[opening_info]['elo'],
+          #   u'last_played': firebase_data[opening_info]['last_played'],
+          #   u'score': firebase_data[opening_info]['score'],
+          #   u'white_win_percent': firebase_data[opening_info]['white_win_percent'],
+          #   u'black_win_percent': firebase_data[opening_info]['black_win_percent'],
+          #   u'avg_cp_loss_per_game': firebase_data[opening_info]['avg_cp_loss/game'],
+          #   u'inaccuracies_per_game': firebase_data[opening_info]['inaccuracies/game'],
+          #   u'mistakes_per_game': firebase_data[opening_info]['mistakes/game'],
+          #   u'blunders_per_game': firebase_data[opening_info]['blunders/game'],
+          #   u'familiarity': firebase_data[opening_info]['familiarity'],
+          #   u'sharpness': firebase_data[opening_info]['sharpness'],
+          #   u'best': firebase_data[opening_info]['best'],
+          # })
 
 
 if __name__ == '__main__':
